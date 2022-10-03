@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/osirisguitar/energy-meter/issues"
   },
-  "homepage": "https://github.com/osirisguitar/energy-meter#readme"
+  "homepage": "https://github.com/osirisguitar/energy-meter#readme",
+  "dependencies": {
+    "rpio": "^2.4.2"
+  }
 }
