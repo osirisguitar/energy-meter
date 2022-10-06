@@ -13,6 +13,7 @@ const {Point} = require('@influxdata/influxdb-client')
 const writeApi = client.getWriteApi(org, bucket)
 writeApi.useDefaultTags({host: 'host1'})
 
+// Write value to influxdb
 function writeValue(watt)
 {
 	const point = new Point('energy').floatField('kW', watt)
@@ -23,8 +24,10 @@ rpio.open(15, rpio.INPUT, rpio.PULL_DOWN);
 
 let last = null
 
+// Callback for high signal on GPIO = led lit
 function pollcb(pin)
 {
+	// Wait to avoid false multiple detections
 	rpio.msleep(2);
 
         if (!rpio.read(pin))
@@ -35,6 +38,8 @@ function pollcb(pin)
 	{
 		let kW = 3600/(now - last)
 		console.log(kW + " kW")
+
+		// Extra check for double detection
 		if (kW < 100) {
 			writeValue(kW)
 		} else {
