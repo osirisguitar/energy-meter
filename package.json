@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/osirisguitar/energy-meter#readme",
   "dependencies": {
+    "@influxdata/influxdb-client": "^1.31.0",
+    "dotenv": "^16.0.3",
     "rpio": "^2.4.2"
   }
 }

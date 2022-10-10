@@ -1,28 +1,53 @@
 const rpio = require('rpio')
+const {InfluxDB} = require('@influxdata/influxdb-client')
+const config = require('dotenv').config()
 
-rpio.open(15, rpio.INPUT, rpio.PULL_UP);
+// You can generate an API token from the "API Tokens Tab" in the UI
+const token = process.env.influx_token
+const org = process.env.influx_org
+const bucket = process.env.influx_bucket
+
+const client = new InfluxDB({url: process.env.influx_url, token: token})
+
+const {Point} = require('@influxdata/influxdb-client')
+const writeApi = client.getWriteApi(org, bucket)
+writeApi.useDefaultTags({host: 'host1'})
+
+// Write value to influxdb
+function writeValue(watt)
+{
+	const point = new Point('energy').floatField('kW', watt)
+	writeApi.writePoint(point)
+}
+
+rpio.open(15, rpio.INPUT, rpio.PULL_DOWN);
 
 let last = null
 
+// Callback for high signal on GPIO = led lit
 function pollcb(pin)
 {
-        /*
-         * Wait for a small period of time to avoid rapid changes which
-         * can't all be caught with the 1ms polling frequency.  If the
-         * pin is no longer down after the wait then ignore it.
-         */
-        rpio.msleep(2);
+	// Wait to avoid false multiple detections
+	rpio.msleep(2);
 
-        if (rpio.read(pin))
-                return;
+        if (!rpio.read(pin))
+            return;
 
 	let now = Date.now()
 	if (last)
 	{
-		console.log(3600/(now - last) + " kW")
+		let kW = 3600/(now - last)
+		console.log(kW + " kW")
+
+		// Extra check for double detection
+		if (kW < 100) {
+			writeValue(kW)
+		} else {
+			console.log('too big')
+		}
 	}
 	
 	last = now
 }
 
-rpio.poll(15, pollcb, rpio.POLL_LOW);
+rpio.poll(15, pollcb, rpio.POLL_HIGH);
